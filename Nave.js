@@ -19,16 +19,29 @@ function initGame() {
   asteroids = [];
   lasers = [];
   // Crear asteroides iniciales
-  spawnAsteroids(5);
+  spawnAsteroids(10);
 }
 
 function spawnAsteroids(count) {
   for (let i = 0; i < count; i++) {
-    // Evitar crear asteroides muy cerca de la nave
+    // Elegir aleatoriamente desde qué borde aparecerá (0:arriba, 1:derecha, 2:abajo, 3:izquierda)
+    let borde = floor(random(4));
     let pos;
-    do {
-      pos = createVector(random(width), random(height));
-    } while (dist(pos.x, pos.y, ship.pos.x, ship.pos.y) < 100);
+    
+    switch(borde) {
+      case 0: // Arriba
+        pos = createVector(random(width), 0);
+        break;
+      case 1: // Derecha
+        pos = createVector(width, random(height));
+        break;
+      case 2: // Abajo
+        pos = createVector(random(width), height);
+        break;
+      case 3: // Izquierda
+        pos = createVector(0, random(height));
+        break;
+    }
     
     asteroids.push(new Asteroid(pos));
   }
@@ -232,10 +245,18 @@ class Laser {
 
 class Asteroid {
   constructor(pos, radius) {
-    this.pos = pos || createVector(random(width), random(height));
-    this.vel = p5.Vector.random2D();
-    this.vel.mult(random(1, 2));
+    this.pos = pos;
     this.radius = radius || random(30, 50);
+    
+    // Calcular dirección hacia el centro de la pantalla
+    let centerDir = createVector(width/2 - this.pos.x, height/2 - this.pos.y);
+    centerDir.normalize();
+    
+    // Añadir algo de aleatoriedad a la dirección
+    centerDir.rotate(random(-PI/4, PI/4));
+    
+    // Establecer velocidad
+    this.vel = centerDir.mult(random(1, 2));
     
     // Crear forma irregular
     this.vertices = [];
@@ -249,6 +270,7 @@ class Asteroid {
     }
   }
 
+  // El resto de los métodos permanecen igual
   update() {
     this.pos.add(this.vel);
     this.edges();
